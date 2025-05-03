@@ -1,0 +1,81 @@
+import mpi.MPI; // This is like bringing in a toolbox that helps us with some special tasks (MPI = Message Passing Interface, used to make computers talk to each other)
+
+import java.util.Scanner; // We're not using Scanner in this code, so we can ignore this line for now
+
+public class ArrSum {  // This is the name of our project or task, we call it "ArrSum"
+    public static void main(String[] args) throws Exception {  // This is the starting point where our program begins
+
+        MPI.Init(args);  // This line starts MPI and gets everything ready so that computers can start talking
+
+        int rank = MPI.COMM_WORLD.Rank();  // This is like giving each computer a name (rank). 0 is the main computer (root), others have different numbers.
+        int size = MPI.COMM_WORLD.Size();  // This is the total number of computers (or processes) talking to each other.
+
+        int unitsize = 5;  // This is how many numbers we will give to each computer to work on.
+        int root = 0;  // Root is the main computer (rank 0) that will give numbers to the others.
+
+        int send_buffer[] = null;  // This is a box to hold all the numbers we want to send to other computers
+        send_buffer = new int[unitsize * size];  // Now we make a big box that can hold all the numbers (unitsize * size)
+
+        int recieve_buffer[] = new int[unitsize];  // This is a small box each computer will use to store the numbers it gets from root
+        int new_recieve_buffer[] = new int[size];  // This is another box to hold the results from all computers, but only at the root computer
+
+        //  Now let's fill the big box with numbers, but only the root computer will do this
+        if (rank == root) {
+            int total_elements = unitsize * size;  // Total numbers to fill the box
+            System.out.println("Enter " + total_elements + " elements");  // Ask for the numbers from the user
+            for (int i = 0; i < total_elements; i++) {  // Loop to ask for each number
+                System.out.println("Element " + i + "\t = " + i);  // Print out what number we want
+                send_buffer[i] = i;  // Put that number into the big box
+            }
+        }
+
+        //  Scatter data to processes
+        // Now, we're sending pieces of the big box (send_buffer) to each computer. Each computer gets a small piece (recieve_buffer)
+        MPI.COMM_WORLD.Scatter(
+            send_buffer,  // Big box from the root computer
+            0,  // Start sending from the first number
+            unitsize,  // Send a small piece (unitsize) to each computer
+            MPI.INT,  // The type of data is an integer number (a whole number)
+            recieve_buffer,  // Each computer will put its piece into the recieve_buffer
+            0,  // Start receiving at the first number
+            unitsize,  // Each computer gets unitsize numbers
+            MPI.INT,  // The type of data is integer
+            root  // The root computer is sending the numbers to others
+        );
+
+        //  Each computer adds up its numbers
+        //  The non-root computers will now calculate the sum of their piece of the numbers
+        for (int i = 1; i < unitsize; i++) {  // Start at 1, because the first number is already in the result
+            recieve_buffer[0] += recieve_buffer[i];  // Add each number to the first number
+        }
+
+        // Print out the sum that each computer calculated (the "intermediate sum")
+        System.out.println(
+            "Intermediate sum at process " + rank + " is " + recieve_buffer[0]
+        );
+
+        // Now, gather all the results from each computer back to the root computer
+        MPI.COMM_WORLD.Gather(
+            recieve_buffer,  // Send each computer's sum (it's in recieve_buffer)
+            0,  // Start from the first number
+            1,  // Each computer sends only 1 number (its sum)
+            MPI.INT,  // The type of data is integer
+            new_recieve_buffer,  // Root computer gets the sums from all the computers
+            0,  // Start at the first position in the new_recieve_buffer
+            1,  // Root gets 1 number from each computer
+            MPI.INT,  // The type of data is integer
+            root  // The root computer collects all the sums
+        );
+
+        //  Now the root computer adds up all the sums from each computer
+        if (rank == root) {
+            int total_sum = 0;  // Start with 0 for the total sum
+            for (int i = 0; i < size; i++) {  // Go through each computer's result
+                total_sum += new_recieve_buffer[i];  // Add the sum from each computer to the total
+            }
+            System.out.println("Final sum : " + total_sum);  // Print out the final total sum from all computers
+        }
+
+        MPI.Finalize();  // Finish MPI and close everything down
+    }
+}

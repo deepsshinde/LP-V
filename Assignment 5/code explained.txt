@@ -1,0 +1,124 @@
+import java.util.Random; // Import the Random class to generate random numbers.
+
+class Process extends Thread { // 'Process' represents each individual process (like a player in the game).
+    private int id;  // The unique ID for each process (each player).
+    private boolean hasToken;  // This will track if the process has the token (the magic stick).
+    private boolean requestCS;  // This will track if the process wants to enter the critical section (the tent).
+    private Process[] ring;  // This is the array of all processes (players), forming a circular ring.
+
+    // Constructor: Initializes the process with a unique ID and gives it the ring of processes (other players).
+    public Process(int id, Process[] ring) {
+        this.id = id;  // Set the process ID.
+        this.ring = ring;  // Set the ring to reference all other processes.
+        this.hasToken = false;  // Initially, the process doesn’t have the token.
+        this.requestCS = false;  // Initially, the process doesn’t want to enter the critical section.
+    }
+
+    // Method to give the token to the process (the process gets the magic stick).
+    public void receiveToken() {
+        hasToken = true;  // Now the process has the token.
+    }
+
+    // This method contains the main logic for each process. It will run in a separate thread.
+    @Override
+    public void run() {
+        Random rand = new Random();  // Create a Random object to simulate random actions.
+
+        while (true) {  // The process will run infinitely (until we stop the program).
+            try {
+                // Simulate some work the process might do by sleeping for a random time between 1 to 3 seconds.
+                Thread.sleep(rand.nextInt(3000) + 1000);  
+
+                // Randomly decide whether the process wants to enter the critical section.
+                requestCS = rand.nextBoolean();
+
+                // If the process has the token, it can enter the critical section.
+                if (hasToken) {
+                    if (requestCS) {  // If the process wants to enter the critical section.
+                        enterCriticalSection();  // The process enters the critical section.
+                        requestCS = false;  // Once inside, the process doesn't want to enter again until the next chance.
+                    }
+
+                    // After entering the critical section, pass the token to the next process in the ring.
+                    int nextId = (id + 1) % ring.length;  // Find the next process (circular).
+                    ring[nextId].receiveToken();  // Give the token to the next process.
+                    hasToken = false;  // The current process no longer has the token.
+                }
+            } catch (InterruptedException e) {  // If the sleep is interrupted, print the error.
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // This method simulates the process entering the critical section (the tent).
+    private void enterCriticalSection() throws InterruptedException {
+        System.out.println("Process " + id + " entering Critical Section.");  // Print message when entering the CS.
+        Thread.sleep(2000);  // Simulate the time the process spends in the critical section.
+        System.out.println("Process " + id + " exiting Critical Section.");  // Print message when exiting the CS.
+    }
+}
+
+public class TokenRingSimulation {  // This is the main class that runs the simulation.
+    public static void main(String[] args) {
+        int n = 5;  // Number of processes (players) in the ring.
+        Process[] ring = new Process[n];  // Create an array to hold all the processes (players).
+
+        // Create the processes and assign each one a unique ID and a reference to the ring.
+        for (int i = 0; i < n; i++) {
+            ring[i] = new Process(i, ring);  // Each process gets its ID and the reference to the ring.
+        }
+
+        // Give the token (the magic stick) to the first process (process 0).
+        ring[0].receiveToken();
+
+        // Start all the processes. Each process will run in its own thread.
+        for (int i = 0; i < n; i++) {
+            ring[i].start();  // Start each process, running its 'run' method in a separate thread.
+        }
+    }
+}
+
+
+Key Components of the Code:
+Process class:
+
+Represents each individual process (or player).
+
+It extends the Thread class, meaning each process will run in its own thread concurrently with others.
+
+Each process has a token, which gives it permission to enter the critical section (the special tent).
+
+Token Management:
+
+Each process can either hold the token (meaning it can enter the critical section) or pass it to the next process in a circular manner.
+
+The token is passed to the next process after the current one finishes in the critical section.
+
+Entering Critical Section:
+
+When a process has the token and randomly decides it wants to enter the critical section, it simulates spending time there by sleeping for 2 seconds, then prints that it's entering and exiting the section.
+
+Infinite Loop:
+
+The while(true) loop ensures that each process keeps trying to request the critical section and passing the token around infinitely.
+
+TokenRingSimulation class:
+
+This is the main part of the program, where we create a ring of processes (an array of Process objects).
+
+The first process (process 0) is given the token, and the other processes are started concurrently.
+
+How the Code Works:
+We have 5 processes (players).
+
+Each process (player) will randomly decide whether to enter the critical section (tent).
+
+The process with the token is the only one that can enter the critical section.
+
+After entering the critical section, the process passes the token to the next player in the ring.
+
+The game continues indefinitely, with processes randomly requesting to enter the critical section, using the token, and passing it along.
+
+This is a simulation of a token ring system, where each process waits for the token to get into the critical section and then passes it along to the next process.
+
+Let me know if you'd like further clarification!
