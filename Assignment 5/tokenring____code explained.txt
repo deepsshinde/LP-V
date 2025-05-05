@@ -1,0 +1,70 @@
+// Importing Scanner class to take user input
+import java.util.*;
+
+// Main class for the Token Ring simulation
+public class TokenRing {
+
+    public static void main(String[] args) {
+        // Creating a Scanner object to read input from the console
+        Scanner sc = new Scanner(System.in);
+        
+        // Ask user for number of nodes (processes) in the ring
+        System.out.print("Enter Number Of Nodes You Want In The Ring : ");
+        int n = sc.nextInt(); // read number of processes
+        
+        // Display the ring structure
+        System.out.println("Ring Formed Is As Below: ");
+        for (int i = 0; i < n; i++) {
+            System.out.print(i + " ");
+        }
+        System.out.println("0"); // to complete the circular ring view (last to 0)
+
+        // Variable to control loop if user wants to send data again
+        int choice = 0;
+
+        // Start a do-while loop to allow multiple transmissions
+        do {
+            // Ask user to enter sender process ID
+            System.out.print("Enter Sender : ");
+            int sender = sc.nextInt();
+
+            // Ask user to enter receiver process ID
+            System.out.print("Enter Receiver : ");
+            int receiver = sc.nextInt();
+
+            // Ask for data to be sent
+            System.out.print("Enter Data To Send : ");
+            int data = sc.nextInt();
+
+            // Initially, token is assumed to be with process 0
+            int token = 0;
+
+            // Show how token is passed from 0 to sender
+            System.out.print("Token Passing : ");
+            for (int i = token; i < sender; i++) {
+                System.out.print(" " + i + "->"); // token passing visually shown
+            }
+            System.out.println(" " + sender); // token reaches sender
+
+            // Sender sends the data
+            System.out.println("Sender: " + sender + " Sending Data: " + data);
+
+            // Data is forwarded node by node until it reaches the receiver
+            for (int i = sender; i != receiver; i = (i + 1) % n) {
+                System.out.println("Data: " + data + " Forwarded By: " + i);
+            }
+
+            // Receiver gets the data
+            System.out.println("Receiver: " + receiver + " Received The Data: " + data);
+
+            // Update token location to sender (for visualization only)
+            token = sender;
+
+            // Ask if user wants to send data again
+            System.out.print("Do You Want To Send Data Again? If YES Enter 1, If NO Enter 0: ");
+            choice = sc.nextInt();
+
+        } while (choice == 1); // repeat if user wants to send again
+
+    } // end of main
+} // end of class
